@@ -1,0 +1,19 @@
+---
+import type {Props as $} from 'astro-portabletext/types'
+import type {SanityImageSource} from '@sanity/image-url'
+import {imageUrl} from '../../lib/sanity/client'
+
+type Props = $<{_type: 'image'; _key?: string; alt?: string; caption?: string} & SanityImageSource>
+
+const {node} = Astro.props
+const src = imageUrl(node, 1200)
+---
+
+{
+  src && (
+    <figure class="my-10">
+      <img src={src} alt={node.alt ?? ''} class="w-full rounded-xl object-cover" loading="lazy" decoding="async" />
+      {node.caption && <figcaption class="mt-3 text-center font-label-sm text-on-surface-variant">{node.caption}</figcaption>}
+    </figure>
+  )
+}

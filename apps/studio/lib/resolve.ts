@@ -11,6 +11,14 @@ export const mainDocuments = defineDocuments([
     filter: `_type == "recipe" && slug.current == $slug && lower(language) == $locale`,
   },
   {
+    route: '/:locale/blog/:slug',
+    filter: `_type == "blogPost" && slug.current == $slug && lower(language) == $locale`,
+  },
+  {
+    route: '/:locale/blog',
+    filter: `_type == "blogPost" && lower(language) == $locale`,
+  },
+  {
     route: '/:locale/pantry',
     filter: `_type == "pantrySnapshot" && lower(language) == $locale`,
   },
@@ -42,6 +50,25 @@ export const resolve: PresentationPluginOptions['resolve'] = {
           {
             title: 'Recipe directory',
             href: `/${localePath(doc?.language)}/recipes/`,
+          },
+        ],
+      }),
+    }),
+    blogPost: defineLocations({
+      select: {
+        title: 'title',
+        slug: 'slug.current',
+        language: 'language',
+      },
+      resolve: (doc) => ({
+        locations: [
+          {
+            title: doc?.title || 'Blog post',
+            href: `/${localePath(doc?.language)}/blog/${doc?.slug}/`,
+          },
+          {
+            title: 'Blog',
+            href: `/${localePath(doc?.language)}/blog/`,
           },
         ],
       }),
