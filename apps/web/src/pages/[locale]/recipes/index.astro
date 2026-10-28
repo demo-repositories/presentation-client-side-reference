@@ -19,7 +19,7 @@ if (!locale) {
 
 const filters = parseRecipeFilters(Astro.url.searchParams)
 const labels = filterGroupLabels[locale]
-const draftProps = getDraftModeProps(Astro.cookies)
+const draftProps = getDraftModeProps(Astro)
 
 const [{data: categories}, {data: recipes}] = await Promise.all([
   loadQuery<RECIPE_CATEGORIES_QUERY_RESULT>({

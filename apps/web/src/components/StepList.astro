@@ -39,13 +39,11 @@ const {steps, locale} = Astro.props
 </ol>
 
 <script>
-  document.querySelectorAll('[data-step-list]').forEach((list) => {
-    list.querySelectorAll('.step-checkbox').forEach((checkbox) => {
-      checkbox.addEventListener('change', (event) => {
-        const target = event.currentTarget as HTMLInputElement
-        const content = target.closest('[data-step-item]')?.querySelector('.step-content') as HTMLElement | null
-        if (content) content.style.opacity = target.checked ? '0.45' : '1'
-      })
-    })
+  // Delegated so it keeps working when the page is swapped in place during visual editing.
+  document.addEventListener('change', (event) => {
+    const target = event.target
+    if (!(target instanceof HTMLInputElement) || !target.matches('[data-step-list] .step-checkbox')) return
+    const content = target.closest('[data-step-item]')?.querySelector('.step-content') as HTMLElement | null
+    if (content) content.style.opacity = target.checked ? '0.45' : '1'
   })
 </script>

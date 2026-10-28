@@ -18,7 +18,7 @@ if (!locale) {
 const {data: pantry} = await loadQuery<PANTRY_SNAPSHOT_QUERY_RESULT>({
   query: PANTRY_SNAPSHOT_QUERY,
   params: {locale},
-  ...getDraftModeProps(Astro.cookies),
+  ...getDraftModeProps(Astro),
 })
 ---
 
