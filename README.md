@@ -21,16 +21,16 @@ Kitchen operating system monorepo: **Sanity Studio v6**, **Astro 7** frontend on
 
 ## Sanity project
 
-- Organization: [ofsMxPwd5](https://www.sanity.io/organizations/ofsMxPwd5)
-- Project: **Mise Kitchen OS** (`1rkupi9j`)
+- Organization: TM Org ([oF6px1Oho](https://www.sanity.io/organizations/oF6px1Oho))
+- Project: **Mise Kitchen OS** (`jyyuozra`)
 - Dataset: `production` (public read for Astro static build)
-- Hosted Studio: https://mise-kitchen-os.sanity.studio/
+- Hosted Studio: https://mise-kitchen-os-tm.sanity.studio/ (dev: https://mise-kitchen-os-tm-dev.sanity.studio/)
 
 Copy `.env.example` to `.env` and set your project ID, or run:
 
 ```bash
 cd apps/studio
-pnpm exec sanity projects create "Mise Kitchen OS" --organization=ofsMxPwd5 --yes --json
+pnpm exec sanity projects create "Mise Kitchen OS" --organization=oF6px1Oho --yes --json
 pnpm exec sanity dataset create production --visibility public
 ```
 
@@ -52,7 +52,7 @@ pnpm bootstrap
 
 Bootstrap deploys blueprint, schema (via hosted Studio deploy), seeds locales (`en-US`, `hi-IN`), and imports sample Mise content.
 
-> **Schema deploy:** `sanity schemas deploy` may abort on some Node/macOS setups. Use `pnpm --filter studio run schema:deploy` (runs `sanity deploy`) which deploys schema + Studio to https://mise-kitchen-os.sanity.studio/.
+> **Schema deploy:** `sanity schemas deploy` may abort on some Node/macOS setups. Use `pnpm --filter studio run schema:deploy` (runs `sanity deploy`) which deploys schema + Studio to https://mise-kitchen-os-tm.sanity.studio/.
 
 3. Start development:
 
@@ -91,10 +91,10 @@ Studio deploy (set `SANITY_STUDIO_HOSTNAME` — slug only, no `https://`):
 
 ```bash
 # Production
-SANITY_STUDIO_HOSTNAME=mise-kitchen-os pnpm --filter studio deploy
+SANITY_STUDIO_HOSTNAME=mise-kitchen-os-tm pnpm --filter studio run deploy
 
 # Development (same production dataset)
-SANITY_STUDIO_HOSTNAME=mise-kitchen-os-dev pnpm --filter studio deploy
+SANITY_STUDIO_HOSTNAME=mise-kitchen-os-tm-dev pnpm --filter studio run deploy
 ```
 
 GitHub Actions workflow: `.github/workflows/deploy.yml`
@@ -109,18 +109,18 @@ GitHub Actions workflow: `.github/workflows/deploy.yml`
 
 **Production** and **Development** are separate GitHub environments. Add values under **Settings → Secrets and variables → Actions → Environments** (not repository-level secrets).
 
-| Name                        | Type     | Used by             | Production example                       | Development example                          |
-| --------------------------- | -------- | ------------------- | ---------------------------------------- | -------------------------------------------- |
-| `SANITY_STUDIO_PROJECT_ID`  | Variable | all                 | `1rkupi9j`                               | `1rkupi9j`                                   |
-| `SANITY_STUDIO_DATASET`     | Variable | all                 | `production`                             | `production`                                 |
-| `SANITY_STUDIO_HOSTNAME`    | Variable | studio / studio-dev | `mise-kitchen-os`                        | `mise-kitchen-os-dev`                        |
-| `SANITY_STUDIO_URL`         | Variable | web, studio         | `https://mise-kitchen-os.sanity.studio`  | `https://mise-kitchen-os-dev.sanity.studio`  |
-| `SANITY_STUDIO_PREVIEW_URL` | Variable | studio / studio-dev | `https://mise-web.shehjkhan.workers.dev` | `https://mise-web-dev.shehjkhan.workers.dev` |
-| `SANITY_STUDIO_APP_ID`      | Variable | studio (optional)   | `dhe9wg4msckhg9y2zh5y4qzf`               | set after first dev deploy (optional)        |
-| `CLOUDFLARE_ACCOUNT_ID`     | Variable | web, web-dev        | Cloudflare account ID                    | same                                         |
-| `SANITY_AUTH_TOKEN`         | Secret   | studio, studio-dev  | Sanity deploy token                      | same token                                   |
-| `CLOUDFLARE_API_TOKEN`      | Secret   | web, web-dev        | See below                                | same                                         |
-| `SANITY_API_READ_TOKEN`     | Secret   | web, web-dev (opt.) | Read token for draft mode                | optional                                     |
+| Name                        | Type     | Used by             | Production example                         | Development example                            |
+| --------------------------- | -------- | ------------------- | ------------------------------------------ | ---------------------------------------------- |
+| `SANITY_STUDIO_PROJECT_ID`  | Variable | all                 | `jyyuozra`                                 | `jyyuozra`                                     |
+| `SANITY_STUDIO_DATASET`     | Variable | all                 | `production`                               | `production`                                   |
+| `SANITY_STUDIO_HOSTNAME`    | Variable | studio / studio-dev | `mise-kitchen-os-tm`                       | `mise-kitchen-os-tm-dev`                       |
+| `SANITY_STUDIO_URL`         | Variable | web, studio         | `https://mise-kitchen-os-tm.sanity.studio` | `https://mise-kitchen-os-tm-dev.sanity.studio` |
+| `SANITY_STUDIO_PREVIEW_URL` | Variable | studio / studio-dev | `https://mise-web.shehjkhan.workers.dev`   | `https://mise-web-dev.shehjkhan.workers.dev`   |
+| `SANITY_STUDIO_APP_ID`      | Variable | studio (optional)   | `dhe9wg4msckhg9y2zh5y4qzf`                 | set after first dev deploy (optional)          |
+| `CLOUDFLARE_ACCOUNT_ID`     | Variable | web, web-dev        | Cloudflare account ID                      | same                                           |
+| `SANITY_AUTH_TOKEN`         | Secret   | studio, studio-dev  | Sanity deploy token                        | same token                                     |
+| `CLOUDFLARE_API_TOKEN`      | Secret   | web, web-dev        | See below                                  | same                                           |
+| `SANITY_API_READ_TOKEN`     | Secret   | web, web-dev (opt.) | Read token for draft mode                  | optional                                       |
 
 `SANITY_STUDIO_URL` and `SANITY_STUDIO_PREVIEW_URL` are optional when `SANITY_STUDIO_HOSTNAME` is set — CI derives `https://<hostname>.sanity.studio` if URL is omitted.
 

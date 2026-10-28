@@ -20,7 +20,7 @@ for (const dir of [repoRoot, __dirname]) {
 }
 
 const projectId =
-  process.env.SANITY_STUDIO_PROJECT_ID ?? process.env.PUBLIC_SANITY_PROJECT_ID ?? '1rkupi9j'
+  process.env.SANITY_STUDIO_PROJECT_ID ?? process.env.PUBLIC_SANITY_PROJECT_ID ?? 'jyyuozra'
 const dataset =
   process.env.SANITY_STUDIO_DATASET ?? process.env.PUBLIC_SANITY_DATASET ?? 'production'
 const studioUrl = process.env.SANITY_STUDIO_URL ?? 'http://localhost:3333'
