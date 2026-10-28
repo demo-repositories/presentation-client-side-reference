@@ -17,7 +17,3 @@ export function getDraftModeProps({
     liveQueries: perspectiveCookie ? locals.liveQueries : undefined,
   }
 }
-
-export function isDraftMode(cookies: AstroCookies | undefined) {
-  return cookies?.has(perspectiveCookieName) ?? false
-}

@@ -20,5 +20,3 @@ export function imageUrl(
   if (!img) return undefined
   return height ? img.width(width).height(height).url() : img.width(width).url()
 }
-
-export {sanityClient as getSanityClient}
