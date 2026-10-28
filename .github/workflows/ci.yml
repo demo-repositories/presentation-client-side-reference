@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
 
 env:
-  SANITY_STUDIO_PROJECT_ID: 1rkupi9j
+  SANITY_STUDIO_PROJECT_ID: jyyuozra
   SANITY_STUDIO_DATASET: production
-  PUBLIC_SANITY_PROJECT_ID: 1rkupi9j
+  PUBLIC_SANITY_PROJECT_ID: jyyuozra
   PUBLIC_SANITY_DATASET: production
 
 jobs:

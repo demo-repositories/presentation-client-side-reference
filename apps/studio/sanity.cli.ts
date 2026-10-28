@@ -17,7 +17,7 @@ const appId = process.env.SANITY_STUDIO_APP_ID?.trim()
 
 export default defineCliConfig({
   api: {
-    projectId: process.env.SANITY_STUDIO_PROJECT_ID ?? '1rkupi9j',
+    projectId: process.env.SANITY_STUDIO_PROJECT_ID ?? 'jyyuozra',
     dataset: process.env.SANITY_STUDIO_DATASET ?? 'production',
   },
   mediaLibrary: {

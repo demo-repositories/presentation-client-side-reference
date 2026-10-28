@@ -16,7 +16,13 @@ import {structure} from './lib/structure'
 const localPreviewUrl = 'http://localhost:4321'
 const productionPreviewUrl = 'https://mise-web.shehjkhan.workers.dev'
 const devPreviewUrl = 'https://mise-web-dev.shehjkhan.workers.dev'
-const previewUrl = readEnvUrl(process.env.SANITY_STUDIO_PREVIEW_URL, localPreviewUrl)
+// `sanity dev` previews the local Astro app. Built and deployed Studios can't
+// reach localhost, so without an explicit SANITY_STUDIO_PREVIEW_URL they
+// preview the dev worker.
+const previewUrl = readEnvUrl(
+  process.env.SANITY_STUDIO_PREVIEW_URL,
+  import.meta.env?.DEV ? localPreviewUrl : devPreviewUrl,
+)
 const previewInitialUrl = `${previewUrl.replace(/\/$/, '')}/en-us/`
 // Allow iframe preview from local, dev, and production Astro apps.
 const studioPreviewOrigins = uniqueUrls(
@@ -37,7 +43,7 @@ const localizedDocumentTypes = [
 const fieldLocalizedDocumentTypes = ['ingredient', 'recipeCategory', 'pantryCategory'] as const
 
 const projectId =
-  import.meta.env?.SANITY_STUDIO_PROJECT_ID ?? process.env.SANITY_STUDIO_PROJECT_ID ?? '1rkupi9j'
+  import.meta.env?.SANITY_STUDIO_PROJECT_ID ?? process.env.SANITY_STUDIO_PROJECT_ID ?? 'jyyuozra'
 const dataset =
   import.meta.env?.SANITY_STUDIO_DATASET ?? process.env.SANITY_STUDIO_DATASET ?? 'production'
 

@@ -1,6 +1,12 @@
 import {createClient} from '@sanity/client'
 
-/** Mise Media Library — https://www.sanity.io/@ofsMxPwd5/media/mlZKouJfXE8F */
+/**
+ * Mise Media Library — https://www.sanity.io/@ofsMxPwd5/media/mlZKouJfXE8F
+ *
+ * This library belongs to the original org (ofsMxPwd5). The project now lives in
+ * TM Org (oF6px1Oho) and can't be attached to a library in another org, so
+ * documents in project jyyuozra can't reference these assets.
+ */
 export const MISE_MEDIA_LIBRARY = {
   organizationId: 'ofsMxPwd5',
   mediaLibraryId: 'mlZKouJfXE8F',
