@@ -48,12 +48,14 @@ const pageDescription = draftMode ? stegaClean(description) : description
     <title>{pageTitle} · Mise</title>
   </head>
   <body class="min-h-screen bg-background pb-24 md:pb-0">
-    <AppShell locale={locale} currentPath={currentPath}>
-      <LocaleSwitcher slot="actions" locale={locale} currentPath={currentPath} alternateSlugs={alternateSlugs} />
-    </AppShell>
-    <main class="mx-auto max-w-[var(--container-max)] px-[var(--spacing-container-margin)] py-[var(--spacing-section-gap)]">
-      <slot />
-    </main>
+    <div data-page-root class="contents">
+      <AppShell locale={locale} currentPath={currentPath}>
+        <LocaleSwitcher slot="actions" locale={locale} currentPath={currentPath} alternateSlugs={alternateSlugs} />
+      </AppShell>
+      <main class="mx-auto max-w-[var(--container-max)] px-[var(--spacing-container-margin)] py-[var(--spacing-section-gap)]">
+        <slot />
+      </main>
+    </div>
     {
       draftMode && (
         <>

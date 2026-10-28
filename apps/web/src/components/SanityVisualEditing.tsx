@@ -2,6 +2,7 @@ import {useEffect, useMemo, useRef} from 'react'
 import {VisualEditing, type HistoryAdapter, type HistoryUpdate} from '@sanity/visual-editing/react'
 import {perspectiveCookieName} from '@sanity/preview-url-secret/constants'
 import type {ClientPerspective} from '@sanity/client'
+import {refreshPageInPlace} from '../lib/sanity/refresh-page'
 
 function serializePerspective(perspective: ClientPerspective): string {
   return typeof perspective === 'string' ? perspective : JSON.stringify(perspective)
@@ -101,15 +102,10 @@ export default function SanityVisualEditing() {
       portal={true}
       onPerspectiveChange={(perspective) => {
         if (setPerspectiveCookie(perspective)) {
-          window.location.reload()
+          void refreshPageInPlace()
         }
       }}
-      refresh={() => {
-        return new Promise((resolve) => {
-          window.location.reload()
-          resolve()
-        })
-      }}
+      refresh={() => refreshPageInPlace()}
     />
   )
 }
