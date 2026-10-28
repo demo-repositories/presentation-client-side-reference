@@ -2,6 +2,8 @@ import {useEffect, useMemo, useRef} from 'react'
 import {VisualEditing, type HistoryAdapter, type HistoryUpdate} from '@sanity/visual-editing/react'
 import {perspectiveCookieName} from '@sanity/preview-url-secret/constants'
 import type {ClientPerspective} from '@sanity/client'
+import {subscribeToLiveQueries} from '../lib/sanity/live-queries'
+import {refreshPageForLiveEdit, refreshPageInPlace} from '../lib/sanity/refresh-page'
 
 function serializePerspective(perspective: ClientPerspective): string {
   return typeof perspective === 'string' ? perspective : JSON.stringify(perspective)
@@ -75,6 +77,8 @@ export default function SanityVisualEditing() {
     }
   }, [])
 
+  useEffect(() => subscribeToLiveQueries(refreshPageForLiveEdit), [])
+
   const history = useMemo<HistoryAdapter>(
     () => ({
       subscribe: (navigate) => {
@@ -101,15 +105,14 @@ export default function SanityVisualEditing() {
       portal={true}
       onPerspectiveChange={(perspective) => {
         if (setPerspectiveCookie(perspective)) {
-          window.location.reload()
+          void refreshPageInPlace()
         }
       }}
-      refresh={() => {
-        return new Promise((resolve) => {
-          window.location.reload()
-          resolve()
-        })
-      }}
+      // Live-mode snapshots are the primary trigger (see live-queries.ts). The
+      // deprecated `mutation` event still fires after each commit, so it stays as
+      // a fallback for pages without live queries and for the committed state;
+      // refreshPageInPlace coalesces the overlap.
+      refresh={() => refreshPageInPlace()}
     />
   )
 }

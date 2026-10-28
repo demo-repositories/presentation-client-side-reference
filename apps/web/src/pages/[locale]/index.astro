@@ -19,7 +19,7 @@ if (!locale) {
 const {data: home} = await loadQuery<HOME_PAGE_QUERY_RESULT>({
   query: HOME_PAGE_QUERY,
   params: {locale},
-  ...getDraftModeProps(Astro.cookies),
+  ...getDraftModeProps(Astro),
 })
 ---
 

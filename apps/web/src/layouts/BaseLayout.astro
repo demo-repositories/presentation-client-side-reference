@@ -7,6 +7,8 @@ import LocaleSwitcher from '../components/LocaleSwitcher.astro'
 import SanityVisualEditing from '../components/SanityVisualEditing'
 import DisableDraftMode from '../components/DisableDraftMode'
 import type {Locale} from '../lib/i18n'
+import {sanityClient} from 'sanity:client'
+import {LIVE_QUERIES_ELEMENT_ID, type LiveQueriesPayload} from '../lib/sanity/live-queries'
 
 interface Props {
   locale: Locale
@@ -27,6 +29,18 @@ const {
 const draftMode = Astro.cookies?.has(perspectiveCookieName) ?? false
 const pageTitle = draftMode ? stegaClean(title) : title
 const pageDescription = draftMode ? stegaClean(description) : description
+
+const {projectId, dataset, apiVersion, stega} = sanityClient.config()
+const liveQueriesPayload =
+  draftMode && Astro.locals.liveQueries?.length
+    ? JSON.stringify({
+        projectId,
+        dataset,
+        apiVersion,
+        studioUrl: typeof stega?.studioUrl === 'string' ? stega.studioUrl : '',
+        queries: Astro.locals.liveQueries,
+      } satisfies LiveQueriesPayload).replaceAll('<', '\\u003c')
+    : null
 ---
 
 <!doctype html>
@@ -48,15 +62,25 @@ const pageDescription = draftMode ? stegaClean(description) : description
     <title>{pageTitle} · Mise</title>
   </head>
   <body class="min-h-screen bg-background pb-24 md:pb-0">
-    <AppShell locale={locale} currentPath={currentPath}>
-      <LocaleSwitcher slot="actions" locale={locale} currentPath={currentPath} alternateSlugs={alternateSlugs} />
-    </AppShell>
-    <main class="mx-auto max-w-[var(--container-max)] px-[var(--spacing-container-margin)] py-[var(--spacing-section-gap)]">
-      <slot />
-    </main>
+    <div data-page-root class="contents">
+      <AppShell locale={locale} currentPath={currentPath}>
+        <LocaleSwitcher slot="actions" locale={locale} currentPath={currentPath} alternateSlugs={alternateSlugs} />
+      </AppShell>
+      <main class="mx-auto max-w-[var(--container-max)] px-[var(--spacing-container-margin)] py-[var(--spacing-section-gap)]">
+        <slot />
+      </main>
+    </div>
     {
       draftMode && (
         <>
+          {liveQueriesPayload && (
+            <script
+              is:inline
+              type="application/json"
+              id={LIVE_QUERIES_ELEMENT_ID}
+              set:html={liveQueriesPayload}
+            />
+          )}
           <SanityVisualEditing client:only="react" />
           <DisableDraftMode client:only="react" />
         </>

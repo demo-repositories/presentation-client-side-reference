@@ -1,6 +1,7 @@
 import type {ClientPerspective, QueryParams} from '@sanity/client'
 import {getSecret} from 'astro:env/server'
 import {sanityClient} from 'sanity:client'
+import type {LiveQuery} from './live-queries'
 
 function parsePerspective(raw: string | undefined): ClientPerspective | undefined {
   if (!raw) return undefined
@@ -19,10 +20,12 @@ export async function loadQuery<QueryResponse>({
   query,
   params,
   perspectiveCookie = undefined,
+  liveQueries = undefined,
 }: {
   query: string
   params?: QueryParams
   perspectiveCookie?: string | undefined
+  liveQueries?: LiveQuery[] | undefined
 }) {
   const draftMode = perspectiveCookie ? true : false
   const token = getSecret('SANITY_API_READ_TOKEN')
@@ -44,6 +47,10 @@ export async function loadQuery<QueryResponse>({
     resultSourceMap: draftMode ? 'withKeyArraySelector' : false,
     stega: draftMode,
   })
+
+  if (draftMode) {
+    liveQueries?.push({query, params: params ?? {}, result, perspective})
+  }
 
   return {
     data: result,
