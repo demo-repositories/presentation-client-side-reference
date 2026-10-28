@@ -131,7 +131,7 @@ Other 3.6.0 features don't help this preview and were not adopted:
 - **Keep full reloads, with 3.6.0's `experimental_refreshStrategy: {type: 'reload', followUpDelayMs}`.** It fixes lost keystrokes but keeps the flash and the state loss, and still depends on the deprecated event.
 - **Plain DOM replacement of the page root.** This was our first iteration. It's simpler, but it destroys island and form state, and aborting in-flight requests starves updates during continuous typing.
 - **Convert editable pages to React islands with `@sanity/react-loader` and `useOptimistic`.** That gives true per-keystroke updates and optimistic reordering, but means rewriting the `.astro` pages and components as `.tsx` and hydrating them in draft mode. Rejected for now as too large a change.
-- **Layer 3: patch text from snapshots, keyed by stega payload** (an estimated ~550 lines). Makes typing in existing text apply in 1–2 ms with no network. Deferred: it's large and fragile (it depends on stega encoding matching between server and browser clients) and doesn't help new blocks. Revisit if typing latency is still the main complaint once 1 and 2 are verified in Presentation.
+- **Layer 3: patch text from snapshots, keyed by stega payload** (roughly 550 lines). Makes typing in existing text apply in 1–2 ms with no network. Deferred: it's large and fragile (it depends on stega encoding matching between server and browser clients) and doesn't help new blocks. Revisit if typing latency is still the main complaint once 1 and 2 are verified in Presentation.
 
 ## Verification still to do
 
@@ -142,9 +142,12 @@ In a real Presentation session:
 3. Type continuously: the preview keeps up, and the final text lands about 1.5 s after typing stops.
 4. In DevTools → Network: only a few fetch requests per typing burst, and no full page loads.
 5. Repeat on `/en-us/blog/the-complete-guide-to-weeknight-meal-prep/` near the bottom of the page.
+6. Click a link in the preview: the Studio's URL bar and document pane switch straight away, before the next page finishes loading.
+7. Switch perspective (for example, to a release): the page morphs without a full reload.
 
 ## References
 
 - `apps/web/src/lib/sanity/refresh-page.ts`, `live-queries.ts`, `load-query.ts`, `draft-mode.ts`
 - `apps/web/src/components/SanityVisualEditing.tsx`, `apps/web/src/layouts/BaseLayout.astro`
+- `@sanity/astro` 3.6.0: `VisualEditingComponent` (`@sanity/astro/visual-editing/component`) and its default history adapter
 - `@sanity/presentation-comlink` `HistoryRefresh` type (deprecation notes on `mutation` and `livePreviewEnabled`)
