@@ -8,14 +8,17 @@ import {Idiomorph} from 'idiomorph'
 // Must match the wrapper in BaseLayout.astro.
 const PAGE_ROOT_SELECTOR = '[data-page-root]'
 
-// Live snapshots arrive before the Studio has committed the edit, so the
-// refetch they trigger can still render the previous Content Lake state.
-// One trailing refetch after the edits settle picks up the committed result.
-const SETTLE_DELAY_MS = 1500
-
 let inFlight: Promise<void> | null = null
 let dirty = false
-let settleTimer: ReturnType<typeof setTimeout> | undefined
+let afterMorph: ((next: Document) => void) | undefined
+
+/**
+ * Registers a callback that runs synchronously after each morph, in the same
+ * task, so it can re-apply optimistic text before the browser paints.
+ */
+export function setAfterMorph(callback: (next: Document) => void): void {
+  afterMorph = callback
+}
 
 /**
  * Refetches and morphs the page. Calls coalesce: the first runs immediately,
@@ -36,13 +39,6 @@ export function refreshPageInPlace(): Promise<void> {
     }
   })
   return inFlight
-}
-
-/** Refresh now, plus one follow-up once live edits go quiet. */
-export function refreshPageForLiveEdit(): void {
-  void refreshPageInPlace()
-  clearTimeout(settleTimer)
-  settleTimer = setTimeout(() => void refreshPageInPlace(), SETTLE_DELAY_MS)
 }
 
 async function morphFromServer(): Promise<void> {
@@ -72,6 +68,7 @@ async function morphFromServer(): Promise<void> {
     }
 
     morphPageRoot(currentRoot, nextRoot)
+    afterMorph?.(next)
   } catch (error) {
     console.error('In-place refresh failed, reloading', error)
     window.location.reload()
