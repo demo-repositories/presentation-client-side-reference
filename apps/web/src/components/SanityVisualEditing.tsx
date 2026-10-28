@@ -2,8 +2,8 @@ import {useEffect} from 'react'
 import {VisualEditingComponent} from '@sanity/astro/visual-editing/component'
 import {perspectiveCookieName} from '@sanity/preview-url-secret/constants'
 import type {ClientPerspective} from '@sanity/client'
-import {subscribeToLiveQueries} from '../lib/sanity/live-queries'
-import {refreshPageForLiveEdit, refreshPageInPlace} from '../lib/sanity/refresh-page'
+import {resetLiveEdits, startLiveEdits} from '../lib/sanity/live-edit'
+import {refreshPageInPlace} from '../lib/sanity/refresh-page'
 
 function serializePerspective(perspective: ClientPerspective): string {
   return typeof perspective === 'string' ? perspective : JSON.stringify(perspective)
@@ -23,7 +23,7 @@ function setPerspectiveCookie(perspective: ClientPerspective): boolean {
 }
 
 export default function SanityVisualEditing() {
-  useEffect(() => subscribeToLiveQueries(refreshPageForLiveEdit), [])
+  useEffect(() => startLiveEdits(), [])
 
   // History sync comes from @sanity/astro: it reports the URL to Presentation on
   // subscribe, on history changes, and optimistically on same-origin link clicks.
@@ -31,13 +31,14 @@ export default function SanityVisualEditing() {
     <VisualEditingComponent
       onPerspectiveChange={(perspective) => {
         if (setPerspectiveCookie(perspective)) {
+          resetLiveEdits()
           void refreshPageInPlace()
         }
       }}
-      // Live-mode snapshots are the primary trigger (see live-queries.ts). The
+      // Live-mode snapshots are the primary trigger (see live-edit.ts). The
       // deprecated `mutation` event still fires after each commit, so it stays as
-      // a fallback for pages without live queries and for the committed state;
-      // refreshPageInPlace coalesces the overlap.
+      // a fallback for pages without live queries and as an early confirmation
+      // of the committed state; refreshPageInPlace coalesces the overlap.
       refresh={() => refreshPageInPlace()}
     />
   )
