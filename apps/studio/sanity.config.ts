@@ -26,7 +26,13 @@ const studioPreviewOrigins = uniqueUrls(
   productionPreviewUrl,
 )
 
-const localizedDocumentTypes = ['recipe', 'homePage', 'mealPlanEntry', 'pantrySnapshot'] as const
+const localizedDocumentTypes = [
+  'recipe',
+  'homePage',
+  'mealPlanEntry',
+  'pantrySnapshot',
+  'blogPost',
+] as const
 
 const fieldLocalizedDocumentTypes = ['ingredient', 'recipeCategory', 'pantryCategory'] as const
 

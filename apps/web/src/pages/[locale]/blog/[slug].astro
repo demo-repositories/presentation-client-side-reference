@@ -1,0 +1,94 @@
+---
+import {PortableText} from 'astro-portabletext'
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import BlogImage from '../../../components/blog/BlogImage.astro'
+import {loadQuery} from '../../../lib/sanity/load-query'
+import {getDraftModeProps} from '../../../lib/sanity/draft-mode'
+import {imageUrl} from '../../../lib/sanity/client'
+import {BLOG_POST_BY_SLUG_QUERY} from '../../../lib/sanity/queries'
+import type {BLOG_POST_BY_SLUG_QUERY_RESULT} from '@starter/sanity-types'
+import {DEFAULT_LOCALE, formatPublishedDate, localeFromParam} from '../../../lib/i18n'
+import {getRelativeLocaleUrl} from 'astro:i18n'
+
+export const prerender = false
+
+const slug = Astro.params.slug ?? ''
+const locale = localeFromParam(Astro.params.locale)
+if (!locale) {
+  return Astro.redirect(getRelativeLocaleUrl(DEFAULT_LOCALE, 'blog/'))
+}
+
+const {data: post} = await loadQuery<BLOG_POST_BY_SLUG_QUERY_RESULT>({
+  query: BLOG_POST_BY_SLUG_QUERY,
+  params: {locale, slug},
+  ...getDraftModeProps(Astro),
+})
+
+if (!post) {
+  return Astro.redirect(getRelativeLocaleUrl(locale, 'blog/'))
+}
+
+const hero = imageUrl(post.mainImage, 1600, 800)
+---
+
+<BaseLayout
+  locale={locale}
+  title={post.title ?? ''}
+  description={post.excerpt ?? undefined}
+  currentPath={`blog/${slug}/`}
+>
+  <article class="mx-auto max-w-3xl">
+    <a href={getRelativeLocaleUrl(locale, 'blog/')} class="font-label-md text-secondary no-underline">
+      ← {locale === 'hi-IN' ? 'ब्लॉग' : 'Blog'}
+    </a>
+    {
+      post.publishedAt && (
+        <p class="mt-6 font-label-sm text-on-surface-variant">{formatPublishedDate(post.publishedAt, locale)}</p>
+      )
+    }
+    <h1 class="mt-2 font-display-lg text-primary">{post.title}</h1>
+    {post.excerpt && <p class="mt-4 font-body-lg text-on-surface-variant">{post.excerpt}</p>}
+    {
+      hero && (
+        <img
+          src={hero}
+          alt={post.mainImage?.alt ?? post.title ?? ''}
+          class="mt-8 aspect-[2/1] w-full rounded-xl object-cover"
+          fetchpriority="high"
+        />
+      )
+    }
+    <div class="blog-body mt-10 font-body-lg text-on-surface">
+      <PortableText value={post.body ?? []} components={{type: {image: BlogImage}}} />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .blog-body :global(h2) {
+    margin-top: 3rem;
+    font-family: var(--font-display, serif);
+    font-size: 1.75rem;
+    line-height: 1.25;
+    color: var(--color-primary);
+  }
+  .blog-body :global(p) {
+    margin-top: 1.25rem;
+    line-height: 1.75;
+  }
+  .blog-body :global(ul) {
+    margin-top: 1.25rem;
+    padding-left: 1.5rem;
+    list-style: disc;
+  }
+  .blog-body :global(li) {
+    margin-top: 0.5rem;
+  }
+  .blog-body :global(blockquote) {
+    margin-top: 2rem;
+    border-left: 4px solid var(--color-secondary);
+    padding-left: 1.25rem;
+    font-style: italic;
+    color: var(--color-on-surface-variant);
+  }
+</style>

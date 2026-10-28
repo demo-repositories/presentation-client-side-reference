@@ -1,4 +1,5 @@
 import {ingredient} from './documents/ingredient'
+import {blogPost} from './documents/blog-post'
 import {homePage} from './documents/home-page'
 import {mealPlanEntry} from './documents/meal-plan-entry'
 import {pantryCategory} from './documents/pantry-category'
@@ -30,4 +31,5 @@ export const schemaTypes = [
   mealPlanEntry,
   pantrySnapshot,
   videoShowcase,
+  blogPost,
 ]

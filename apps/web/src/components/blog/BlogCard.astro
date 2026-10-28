@@ -1,0 +1,36 @@
+---
+import {getRelativeLocaleUrl} from 'astro:i18n'
+import type {SanityImageSource} from '@sanity/image-url'
+import {imageUrl} from '../../lib/sanity/client'
+import {formatPublishedDate, type Locale} from '../../lib/i18n'
+
+interface Props {
+  locale: Locale
+  title: string
+  slug: string
+  excerpt?: string
+  publishedAt?: string
+  mainImage?: SanityImageSource | null
+}
+
+const {locale, title, slug, excerpt, publishedAt, mainImage} = Astro.props
+const img = imageUrl(mainImage, 640, 320)
+---
+
+<a
+  href={getRelativeLocaleUrl(locale, `blog/${slug}/`)}
+  class="group block overflow-hidden rounded-xl border border-stone-gray bg-surface-container-lowest transition-shadow hover:shadow-sm"
+>
+  {
+    img ? (
+      <img src={img} alt={title} class="aspect-[2/1] w-full object-cover" loading="lazy" />
+    ) : (
+      <div class="aspect-[2/1] w-full bg-secondary-container" />
+    )
+  }
+  <div class="p-5">
+    {publishedAt && <p class="font-label-sm text-on-surface-variant">{formatPublishedDate(publishedAt, locale)}</p>}
+    <h2 class="mt-2 font-headline-md text-primary">{title}</h2>
+    {excerpt && <p class="mt-2 font-body-md text-on-surface-variant line-clamp-3">{excerpt}</p>}
+  </div>
+</a>
