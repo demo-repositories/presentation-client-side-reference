@@ -259,7 +259,7 @@ jobs:
           hostname="${hostname%%.sanity.studio*}"
           hostname="${hostname%%/*}"
           if [ -z "$hostname" ]; then
-            echo "::error::SANITY_STUDIO_HOSTNAME is empty after sanitizing (use slug only, e.g. mise-kitchen-os)"
+            echo "::error::SANITY_STUDIO_HOSTNAME is empty after sanitizing (use slug only, e.g. mise-kitchen-os-tm)"
             exit 1
           fi
           echo "STUDIO_HOSTNAME=$hostname" >> "$GITHUB_ENV"
@@ -338,7 +338,7 @@ jobs:
           hostname="${hostname%%.sanity.studio*}"
           hostname="${hostname%%/*}"
           if [ -z "$hostname" ]; then
-            echo "::error::SANITY_STUDIO_HOSTNAME is empty after sanitizing (use slug only, e.g. mise-kitchen-os-dev)"
+            echo "::error::SANITY_STUDIO_HOSTNAME is empty after sanitizing (use slug only, e.g. mise-kitchen-os-tm-dev)"
             exit 1
           fi
           echo "STUDIO_HOSTNAME=$hostname" >> "$GITHUB_ENV"
