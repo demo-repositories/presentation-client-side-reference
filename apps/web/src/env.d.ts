@@ -10,3 +10,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+declare namespace App {
+  interface Locals {
+    /** Draft-mode queries rendered on this request, handed to Presentation live mode. */
+    liveQueries?: import('./lib/sanity/live-queries').LiveQuery[]
+  }
+}

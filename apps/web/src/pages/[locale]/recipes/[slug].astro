@@ -18,7 +18,7 @@ if (!locale) {
   return Astro.redirect(getRelativeLocaleUrl(DEFAULT_LOCALE, 'recipes/'))
 }
 
-const draftProps = getDraftModeProps(Astro.cookies)
+const draftProps = getDraftModeProps(Astro)
 
 const {data: recipe} = await loadQuery<RECIPE_BY_SLUG_QUERY_RESULT>({
   query: RECIPE_BY_SLUG_QUERY,
