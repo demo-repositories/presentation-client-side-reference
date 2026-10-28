@@ -1,6 +1,6 @@
 # ADR 0001: Faster Presentation preview refresh for the Astro site
 
-**Status:** Accepted. Implemented on `develop` (PRs #3 and #6), 2026-10-28. Amended 2026-10-28 to use `@sanity/astro`'s `VisualEditingComponent` (decision 4).
+**Status:** Accepted. Implemented on `develop` (PRs #3 and #6), 2026-10-28. Amended 2026-10-28 to use `@sanity/astro`'s `VisualEditingComponent` (decision 4) and to add optimistic text edits confirmed by the server (decision 5).
 
 **Not yet verified:** a real Presentation session. Server-side behaviour and production impact were measured; the in-Studio live channel was not.
 
@@ -26,7 +26,7 @@ The problem can be solved in three layers:
 2. use loader live mode as the update signal
 3. patch text in the DOM directly from live snapshots, with no network
 
-We adopted layers 1 and 2. Layer 3 was deferred (see Alternatives).
+Layers 1 and 2 shipped first. Layer 3 followed as decision 5, built as an optimistic update that the server then confirms.
 
 ## Decision
 
@@ -64,10 +64,10 @@ We adopted layers 1 and 2. Layer 3 was deferred (see Alternatives).
 - `createQueryStore({client: false, ssr: true})` + `enableLiveMode({client})` from `@sanity/core-loader`.
 - `client: false` keeps the stores fetcher-less, so the tokenless browser client never fetches and never overwrites draft data. Inside Presentation, the Studio supplies results over comlink.
 - One fetcher store per server query, hydrated with the server result. Recipe detail, for example, runs two queries.
-- When any store's JSON differs from its last value, `refreshPageForLiveEdit()` runs:
-  - refresh immediately
-  - one **settle refresh** 1.5 s after the last change, because live snapshots arrive before the Studio commits the edit, so the immediate refetch can still render the previous Content Lake state
-- The deprecated `mutation` refresh still triggers a morph as a fallback. Coalescing absorbs the overlap, and it becomes a no-op once the Studio stops sending it.
+- When any store's JSON differs from its last value, the snapshot goes to `live-edit.ts` (decision 5), which either patches the text or refreshes from the server.
+- The deprecated `mutation` refresh still triggers a morph as a fallback. It's also an early confirmation that the edit is committed. Coalescing absorbs the overlap, and it becomes a no-op once the Studio stops sending it.
+
+Before decision 5, every snapshot refreshed immediately, plus one **settle refresh** 1.5 s after the last change. The settle refresh existed because live snapshots arrive before the Studio commits the edit, so the immediate refetch can still render the previous Content Lake state. Decision 5 replaces the fixed timer with an explicit check.
 
 ### 3. Test content
 
@@ -89,6 +89,37 @@ Other 3.6.0 features don't help this preview and were not adopted:
 - **Multiple clients / `presentationClient`:** the site reads one project and dataset.
 - **`sanityLoader` (content collections):** stores a snapshot of fetched content, so drafts and unsaved edits wouldn't stream into the preview.
 - **`@sanity/ui` dev dedupe fix:** only affects Astro apps that embed the Studio; ours is a separate app.
+
+### 5. Optimistic text edits, confirmed by the server
+
+Text changes paint from the Studio's snapshot straight away. The server render then confirms them, or corrects them. This is the pattern of an optimistic UI hook such as React's `useOptimistic`, applied to server-rendered HTML. The hook itself only works inside React components, and almost all page content is `.astro`.
+
+**Optimistic update** (`src/lib/sanity/live-edit.ts`, helpers in `optimistic-text.ts`):
+
+- The page keeps two maps per query: the result the DOM currently shows (`rendered`, seeded from `#sanity-live-queries`) and the latest Studio snapshot (`latest`).
+- On each snapshot, `diffText` compares it with `rendered`. It returns the changed strings only when nothing else differs: same shape, same array lengths, same `_id`/`_type`/`_key`/`_ref`, and every changed string carries a stega payload.
+- `patchText` replaces each changed string's full stega-encoded value in the text nodes under `[data-page-root]`. Stega appends an invisible payload naming the document and field path, so `visible text + payload` is unique on the page, and server renders and snapshots encode it the same way. `<astro-island>` subtrees are skipped, because their framework owns that DOM.
+- If every change was found, the update is done with no network. A confirm refetch is scheduled 400 ms after the last keystroke.
+- Anything else refreshes from the server immediately, as before: new or removed blocks, images, references, non-string fields, strings without stega (slugs, URLs, dates), and strings rendered only in attributes (for example, `alt`) or transformed by a component.
+
+**Server confirmation** (`setAfterMorph` hook in `refresh-page.ts`, which runs synchronously after each morph, before paint):
+
+- The fetched HTML embeds the query results it was rendered with. `rendered` is reset from them.
+- Each query's result is compared with its latest snapshot, with stega stripped (`stegaClean`):
+  - **all equal:** the server has the edit; the morph is final
+  - **server behind:** the snapshot text is re-applied in the same task, so stale text never paints; then a refetch follows after 500 ms, 1 s and 2 s
+  - **still behind after three retries:** the server render stands and becomes the baseline, so a snapshot the server never reproduces doesn't restart the loop
+- Perspective switches clear the snapshots first (`resetLiveEdits`), so text from the old perspective is never re-applied over the new render.
+
+**Measured** with the pure helpers against real draft renders from `astro dev` in jsdom:
+
+| Page                              | Stega strings | Found as page text | Simulated text edit |
+| --------------------------------- | ------------- | ------------------ | ------------------- |
+| Blog post (112 blocks, 21 images) | 135           | 114                | patched in 1.2 ms   |
+| Recipe detail (2 queries)         | 18            | 12                 | patched in 0.3 ms   |
+| Home                              | 15            | 14                 | patched in 0.4 ms   |
+
+The strings not found as page text fall back to the server, as designed. They are image `alt` attributes, recipe categories and tags, the other locale's title in the translations query, and the home greeting. Structural edits and strings without stega were confirmed to fall back. The comparison detects an edited snapshot as "server behind" and an identical one as confirmed.
 
 ## Production impact (measured)
 
@@ -113,15 +144,19 @@ Other 3.6.0 features don't help this preview and were not adopted:
 **Better:**
 
 - no reload flash; scroll, focus and unchanged island state survive edits
+- plain-text edits show per keystroke without waiting for the server
 - continuous typing keeps updating instead of being cancelled
 - the update trigger survives the Studio dropping the `mutation` event
 - the published site is unaffected
 
 **Limits:**
 
-- Each update still waits for a server re-render (a few hundred ms). Text does not change per keystroke; that needs layer 3.
+- Plain-text edits in fields rendered as page text update per keystroke (about 1 ms). Everything else still waits for a server re-render (a few hundred ms).
+- Brand-new blocks get no optimistic update. The Studio sends no snapshot for them until they're committed, so they appear after the server render.
+- Optimistic patching relies on the server render and the snapshot carrying the same stega encoding. If they ever diverge, matches fail and edits fall back to server refreshes (today's speed), but they don't render wrongly.
+- A permanently out-of-date server render costs up to three extra refetches after an edit before the server version stands.
 - Portable Text edits reach the preview about once a second. The Portable Text editor batches mutations (250 ms debounce, 1 s ceiling); this is upstream and not configurable.
-- The settle refresh adds one extra fetch per editing burst.
+- Each editing burst costs at least one confirm refetch, plus retries while Content Lake catches up.
 - Islands removed by a morph are never unmounted (`astro:unmount` only fires with ClientRouter). That's harmless for current islands.
 - Large pages carry a large live payload in draft mode only. The 112-block blog post embeds ~255 KB, mostly stega characters. Published pages carry none.
 - `[data-page-root]` is a contract between `BaseLayout.astro` and `refresh-page.ts`. Content outside it does not update on edit.
@@ -131,7 +166,8 @@ Other 3.6.0 features don't help this preview and were not adopted:
 - **Keep full reloads, with 3.6.0's `experimental_refreshStrategy: {type: 'reload', followUpDelayMs}`.** It fixes lost keystrokes but keeps the flash and the state loss, and still depends on the deprecated event.
 - **Plain DOM replacement of the page root.** This was our first iteration. It's simpler, but it destroys island and form state, and aborting in-flight requests starves updates during continuous typing.
 - **Convert editable pages to React islands with `@sanity/react-loader` and `useOptimistic`.** That gives true per-keystroke updates and optimistic reordering, but means rewriting the `.astro` pages and components as `.tsx` and hydrating them in draft mode. Rejected for now as too large a change.
-- **Layer 3: patch text from snapshots, keyed by stega payload** (roughly 550 lines). Makes typing in existing text apply in 1–2 ms with no network. Deferred: it's large and fragile (it depends on stega encoding matching between server and browser clients) and doesn't help new blocks. Revisit if typing latency is still the main complaint once 1 and 2 are verified in Presentation.
+- **Layer 3 as a one-shot patch** (patch text, morph once, re-apply the latest snapshot's text after every morph, with no follow-up check). Rejected in favour of decision 5. Without a check, a morph that fetched before the commit leaves structural changes stale until the next edit, and nothing refreshes content the tracked queries don't cover. Decision 5 compares the server render with the snapshot and retries until they match.
+- **Patch reordering and removal of blocks in the DOM.** That would also avoid the network for drag-and-drop. Not done: those edits refresh from the server, which keeps the patcher small (about 200 lines across two modules). Revisit if reordering feels slow.
 
 ## Verification still to do
 
@@ -139,15 +175,18 @@ In a real Presentation session:
 
 1. Type in a recipe title: no white flash.
 2. Tick a step, edit step text: the checkbox stays ticked.
-3. Type continuously: the preview keeps up, and the final text lands about 1.5 s after typing stops.
+3. Type continuously: the preview keeps up, and the server-confirmed render lands within a few seconds of typing stopping, without the text flashing back.
 4. In DevTools → Network: only a few fetch requests per typing burst, and no full page loads.
 5. Repeat on `/en-us/blog/the-complete-guide-to-weeknight-meal-prep/` near the bottom of the page.
 6. Click a link in the preview: the Studio's URL bar and document pane switch straight away, before the next page finishes loading.
 7. Switch perspective (for example, to a release): the page morphs without a full reload.
+8. Type in a recipe title or step: the text changes per keystroke, with no fetch per keystroke in DevTools → Network. One fetch follows about 400 ms after you stop, plus a retry or two until the commit lands.
+9. Add a new step or reorder steps: the change appears after a server render, and the previous text doesn't flash back in.
+10. Edit a recipe tag or an image's alt text: it updates via the server render, not optimistically.
 
 ## References
 
-- `apps/web/src/lib/sanity/refresh-page.ts`, `live-queries.ts`, `load-query.ts`, `draft-mode.ts`
+- `apps/web/src/lib/sanity/refresh-page.ts`, `live-queries.ts`, `live-edit.ts`, `optimistic-text.ts`, `load-query.ts`, `draft-mode.ts`
 - `apps/web/src/components/SanityVisualEditing.tsx`, `apps/web/src/layouts/BaseLayout.astro`
 - `@sanity/astro` 3.6.0: `VisualEditingComponent` (`@sanity/astro/visual-editing/component`) and its default history adapter
 - `@sanity/presentation-comlink` `HistoryRefresh` type (deprecation notes on `mutation` and `livePreviewEnabled`)
