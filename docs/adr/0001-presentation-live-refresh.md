@@ -1,6 +1,6 @@
 # ADR 0001: Faster Presentation preview refresh for the Astro site
 
-**Status:** Accepted. Implemented on `develop` (PRs #3 and #6), 2026-10-28.
+**Status:** Accepted. Implemented on `develop` (PRs #3 and #6), 2026-10-28. Amended 2026-10-28 to use `@sanity/astro`'s `VisualEditingComponent` (decision 4).
 
 **Not yet verified:** a real Presentation session. Server-side behaviour and production impact were measured; the in-Studio live channel was not.
 
@@ -20,7 +20,7 @@ Constraints:
 - **The `mutation` refresh event is deprecated.** `@sanity/presentation-comlink` marks `source: 'mutation'` (and `livePreviewEnabled`) as deprecated; the next Studio major stops sending them in favour of loader APIs (`loader/query-listen`). A refresh-on-mutation design stops working at that upgrade.
 - **The published site must not pay for preview code.** Visitors must get no extra JavaScript and no slower responses.
 
-We reviewed `demo-repositories/client-tmobile` (an Astro + Sanity reference; see its `docs/adr/0004-astro-visual-editing-architecture.md`). It solves the same problem in three layers:
+The problem can be solved in three layers:
 
 1. morph freshly rendered HTML into the page instead of reloading
 2. use loader live mode as the update signal
@@ -76,6 +76,20 @@ We adopted layers 1 and 2. Layer 3 was deferred (see Alternatives).
 - **Seed:** `pnpm --filter studio seed-blog-posts` creates three en-US posts reusing recipe hero images. The longest has 112 body blocks and 21 images. The ids are fixed, so re-running replaces the posts.
 - **Typegen fix:** `typegen` now passes `--force` to `sanity schema extract`; the newer CLI refuses to overwrite `schema.json` without it.
 
+### 4. Use `@sanity/astro`'s `VisualEditingComponent`
+
+3.6.0's `VisualEditingComponent` (`@sanity/astro/visual-editing/component`) forwards every `VisualEditingOptions` prop. `SanityVisualEditing.tsx` now renders it instead of `VisualEditing` from `@sanity/visual-editing/react`, passing only our `refresh` and `onPerspectiveChange`.
+
+- **Removed:** our hand-written history adapter (URL sync on subscribe, `popstate`/`hashchange` and patched `pushState`/`replaceState`). The integration's default adapter does the same.
+- **Gained:** the integration reports a same-origin link click to Presentation immediately rather than after the next page loads, so the Studio's URL bar and document pane follow navigation sooner.
+- **Unchanged:** refresh behaviour. A custom `refresh` disables `experimental_refreshStrategy`, so the morph and live-mode triggers above still apply. Both components use the same single `@sanity/visual-editing` copy, so the bundle doesn't grow.
+
+Other 3.6.0 features don't help this preview and were not adopted:
+
+- **Multiple clients / `presentationClient`:** the site reads one project and dataset.
+- **`sanityLoader` (content collections):** stores a snapshot of fetched content, so drafts and unsaved edits wouldn't stream into the preview.
+- **`@sanity/ui` dev dedupe fix:** only affects Astro apps that embed the Studio; ours is a separate app.
+
 ## Production impact (measured)
 
 **Setup:** production builds of `d35916b` (before) and the change, served side by side with `astro preview`.
@@ -117,7 +131,7 @@ We adopted layers 1 and 2. Layer 3 was deferred (see Alternatives).
 - **Keep full reloads, with 3.6.0's `experimental_refreshStrategy: {type: 'reload', followUpDelayMs}`.** It fixes lost keystrokes but keeps the flash and the state loss, and still depends on the deprecated event.
 - **Plain DOM replacement of the page root.** This was our first iteration. It's simpler, but it destroys island and form state, and aborting in-flight requests starves updates during continuous typing.
 - **Convert editable pages to React islands with `@sanity/react-loader` and `useOptimistic`.** That gives true per-keystroke updates and optimistic reordering, but means rewriting the `.astro` pages and components as `.tsx` and hydrating them in draft mode. Rejected for now as too large a change.
-- **Layer 3: patch text from snapshots, keyed by stega payload** (client-tmobile `patch.ts`, ~550 lines). Makes typing in existing text apply in 1–2 ms with no network. Deferred: it's large and fragile (it depends on stega encoding matching between server and browser clients) and doesn't help new blocks. Revisit if typing latency is still the main complaint once 1 and 2 are verified in Presentation.
+- **Layer 3: patch text from snapshots, keyed by stega payload** (an estimated ~550 lines). Makes typing in existing text apply in 1–2 ms with no network. Deferred: it's large and fragile (it depends on stega encoding matching between server and browser clients) and doesn't help new blocks. Revisit if typing latency is still the main complaint once 1 and 2 are verified in Presentation.
 
 ## Verification still to do
 
@@ -133,5 +147,4 @@ In a real Presentation session:
 
 - `apps/web/src/lib/sanity/refresh-page.ts`, `live-queries.ts`, `load-query.ts`, `draft-mode.ts`
 - `apps/web/src/components/SanityVisualEditing.tsx`, `apps/web/src/layouts/BaseLayout.astro`
-- `demo-repositories/client-tmobile`: `docs/adr/0004-astro-visual-editing-architecture.md`, `docs/visual-editing/findings.md`, `app/src/preview/{morph,loader,patch}.ts`
 - `@sanity/presentation-comlink` `HistoryRefresh` type (deprecation notes on `mutation` and `livePreviewEnabled`)
