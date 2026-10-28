@@ -112,11 +112,6 @@ export const RECIPE_TRANSLATIONS_QUERY =
   }
 }`)
 
-export const RECIPE_SLUGS_QUERY = defineQuery(`*[_type == "recipe" && defined(slug.current)]{
-  "locale": language,
-  "slug": slug.current
-}`)
-
 // datasetVideo is a plain sanity.fileAsset in this dataset (normal -> join).
 // streamingVideo lives in the org Media Library behind a Global Dataset Reference,
 // so it must be followed with documents::get() and read with an authorized client.
