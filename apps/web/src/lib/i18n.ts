@@ -1,3 +1,5 @@
+import {stegaClean} from '@sanity/client/stega'
+
 export const LOCALES = ['en-US', 'hi-IN'] as const
 export type Locale = (typeof LOCALES)[number]
 export const DEFAULT_LOCALE: Locale = 'en-US'
@@ -39,4 +41,10 @@ export function formatMinutes(minutes?: number | null, locale = 'en-US') {
     return mins ? `${hours} घंटे ${mins} मिनट` : `${hours} घंटे`
   }
   return mins ? `${hours}h ${mins}m` : `${hours}h`
+}
+
+export function formatPublishedDate(value: string, locale: Locale) {
+  return new Intl.DateTimeFormat(locale, {year: 'numeric', month: 'long', day: 'numeric'}).format(
+    new Date(stegaClean(value)),
+  )
 }

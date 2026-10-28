@@ -7,6 +7,7 @@ const l10nTypes = ['l10n.locale', 'l10n.glossary', 'l10n.styleGuide', 'translati
 
 const titleAsc = [{field: 'title', direction: 'asc'} as const]
 const dateDesc = [{field: 'date', direction: 'desc'} as const]
+const publishedAtDesc = [{field: 'publishedAt', direction: 'desc'} as const]
 const nameAsc = [{field: 'name', direction: 'asc'} as const]
 
 const managedDocumentTypes = [
@@ -14,6 +15,7 @@ const managedDocumentTypes = [
   'homePage',
   'mealPlanEntry',
   'pantrySnapshot',
+  'blogPost',
   'ingredient',
   'recipeCategory',
   'pantryCategory',
@@ -36,6 +38,9 @@ export const structure = ((S) =>
       ),
       S.documentTypeListItem('pantrySnapshot').child(() =>
         withLocaleFilter(S.documentTypeList('pantrySnapshot').defaultOrdering(titleAsc)),
+      ),
+      S.documentTypeListItem('blogPost').child(() =>
+        withLocaleFilter(S.documentTypeList('blogPost').defaultOrdering(publishedAtDesc)),
       ),
       S.divider(),
       S.documentTypeListItem('ingredient').child(

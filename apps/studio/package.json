@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "schema:extract": "sanity manifest extract --path ./dist/static",
     "schema:deploy": "sanity build && sanity deploy --no-build -y --url ${SANITY_STUDIO_HOSTNAME:?Set SANITY_STUDIO_HOSTNAME}",
-    "typegen": "SANITY_SCHEMA_EXTRACT=1 sanity schema extract && sanity typegen generate",
+    "typegen": "SANITY_SCHEMA_EXTRACT=1 sanity schema extract --force && sanity typegen generate",
     "seed": "sanity migration run seed-locales --no-dry-run --no-confirm",
     "generate-sample-data": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/generate-sample-data.ts --with-user-token -- --out sample-data.ndjson",
     "import-sample-data": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/import-sample-data.ts --with-user-token",
@@ -24,6 +24,7 @@
     "migrate-recipe-category-kinds": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/migrate-recipe-category-kinds.ts --with-user-token",
     "migrate-recipe-categories": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/migrate-recipe-categories.ts --with-user-token",
     "cleanup-orphan-assets": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/delete-orphan-assets.ts --with-user-token",
+    "seed-blog-posts": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/seed-blog-posts.ts --with-user-token",
     "bootstrap": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/bootstrap.ts --with-user-token"
   },
   "dependencies": {

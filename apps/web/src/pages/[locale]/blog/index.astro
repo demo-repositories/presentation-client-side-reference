@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import BlogCard from '../../../components/blog/BlogCard.astro'
+import {loadQuery} from '../../../lib/sanity/load-query'
+import {getDraftModeProps} from '../../../lib/sanity/draft-mode'
+import {BLOG_POSTS_QUERY} from '../../../lib/sanity/queries'
+import type {BLOG_POSTS_QUERY_RESULT} from '@starter/sanity-types'
+import {DEFAULT_LOCALE, localeFromParam} from '../../../lib/i18n'
+import {getRelativeLocaleUrl} from 'astro:i18n'
+
+export const prerender = false
+
+const locale = localeFromParam(Astro.params.locale)
+if (!locale) {
+  return Astro.redirect(getRelativeLocaleUrl(DEFAULT_LOCALE, 'blog/'))
+}
+
+const {data: posts} = await loadQuery<BLOG_POSTS_QUERY_RESULT>({
+  query: BLOG_POSTS_QUERY,
+  params: {locale},
+  ...getDraftModeProps(Astro),
+})
+
+const title = locale === 'hi-IN' ? 'ब्लॉग' : 'Blog'
+---
+
+<BaseLayout locale={locale} title={title} currentPath="blog/">
+  <h1 class="font-display-lg text-primary">{title}</h1>
+  {
+    posts.length > 0 ? (
+      <div class="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {posts.map((post) => (
+          <BlogCard
+            locale={locale}
+            title={post.title ?? ''}
+            slug={post.slug ?? ''}
+            excerpt={post.excerpt ?? undefined}
+            publishedAt={post.publishedAt ?? undefined}
+            mainImage={post.mainImage}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="mt-10 font-body-lg text-on-surface-variant">
+        {locale === 'hi-IN' ? 'अभी कोई पोस्ट नहीं है।' : 'No posts yet.'}
+      </p>
+    )
+  }
+</BaseLayout>
