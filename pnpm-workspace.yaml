@@ -4,7 +4,7 @@ packages:
   - apps/*
 
 catalog:
-  '@sanity/assist': ^6.1.21
+  '@sanity/assist': ^6.2.6
   '@sanity/client': ^8.15.0
   '@sanity/document-internationalization': ^6.2.46
   '@sanity/icons': ^5.2.2
@@ -14,8 +14,8 @@ catalog:
   '@types/react-dom': ^19.2.3
   groq: ^6.22.0
   lucide-react: ^0.574.0
-  react: ^19.2
-  react-dom: ^19.2
+  react: ^19.3.1
+  react-dom: ^19.3.1
   sanity: ^6.22.0
   sanity-plugin-internationalized-array: ^5.3.9
   styled-components: ^6.3.11
