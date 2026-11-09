@@ -8,6 +8,7 @@ import {agentContextPlugin} from '@sanity/agent-context/studio'
 import {createL10n, useTranslateFieldAction} from '@starter/l10n'
 import {schemaTypes} from './schemaTypes'
 import {MiseIcon} from './components/MiseIcon'
+import {PresentationAwareToolMenu} from './components/PresentationAwareToolMenu'
 import {readEnvUrl, uniqueUrls} from './lib/env-url'
 import {isDevStudio} from './lib/studio-env'
 import {resolve} from './lib/resolve'
@@ -73,6 +74,11 @@ export default defineConfig({
   ...(isSchemaExtract
     ? {}
     : {
+        studio: {
+          components: {
+            toolMenu: PresentationAwareToolMenu,
+          },
+        },
         form: {
           image: {
             assetSources: (sources) => sources.filter((source) => source.name !== 'sanity-default'),
