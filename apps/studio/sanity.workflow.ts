@@ -2,7 +2,7 @@ import type {WorkflowDeploymentInput} from '@sanity/workflow-engine'
 import {defineWorkflowConfig} from '@sanity/workflow-engine/define'
 import {blogPostApproval} from './workflows/blog-post-approval'
 
-const projectId = process.env.SANITY_STUDIO_PROJECT_ID ?? 'jyyuozra'
+const projectId = process.env.SANITY_STUDIO_PROJECT_ID ?? '1rkupi9j'
 const dataset = process.env.SANITY_STUDIO_DATASET ?? 'production'
 
 // No `partition`: this deployment is alone on its dataset, so it and the

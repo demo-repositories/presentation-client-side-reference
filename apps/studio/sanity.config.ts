@@ -45,7 +45,7 @@ const localizedDocumentTypes = [
 const fieldLocalizedDocumentTypes = ['ingredient', 'recipeCategory', 'pantryCategory'] as const
 
 const projectId =
-  import.meta.env?.SANITY_STUDIO_PROJECT_ID ?? process.env.SANITY_STUDIO_PROJECT_ID ?? 'jyyuozra'
+  import.meta.env?.SANITY_STUDIO_PROJECT_ID ?? process.env.SANITY_STUDIO_PROJECT_ID ?? '1rkupi9j'
 const dataset =
   import.meta.env?.SANITY_STUDIO_DATASET ?? process.env.SANITY_STUDIO_DATASET ?? 'production'
 
