@@ -10,7 +10,7 @@ import {
 } from '@sanity/workflow-engine/define'
 
 /** Project roles allowed to approve or send back a submitted post. */
-export const APPROVER_ROLES = ['administrator', 'editor']
+export const APPROVER_ROLES = ['administrator']
 
 /**
  * Blocks Publish on the post while the instance sits in the stage. Guard names
@@ -19,7 +19,7 @@ export const APPROVER_ROLES = ['administrator', 'editor']
 const holdPublishing = (stage: string) =>
   defineGuard({
     name: `hold-publishing-${stage}`,
-    title: 'Waiting for editor approval',
+    title: 'Waiting for administrator approval',
     match: {
       idRefs: [{type: 'fieldRead', field: 'subject'}],
       actions: ['publish'],
@@ -27,7 +27,7 @@ const holdPublishing = (stage: string) =>
   })
 
 /**
- * Draft → submit for review → an approver either approves or sends it back
+ * Draft → submit for review → an administrator either approves or sends it back
  * with comments. Sending back loops to drafting; approval is terminal.
  *
  * Publishing is held until approval. The hold is advisory (Studio disables
@@ -37,7 +37,8 @@ const holdPublishing = (stage: string) =>
 export const blogPostApproval = defineWorkflow({
   name: 'blog-post-approval',
   title: 'Editor approval',
-  description: 'Writers draft and submit a blog post; an editor approves it or sends it back.',
+  description:
+    'Writers draft and submit a blog post; an administrator approves it or sends it back.',
   initialStage: 'drafting',
   fields: [
     defineField({
@@ -92,7 +93,7 @@ export const blogPostApproval = defineWorkflow({
     defineStage({
       name: 'review',
       title: 'In review',
-      description: 'An editor approves the post or sends it back with comments.',
+      description: 'An administrator approves the post or sends it back with comments.',
       guards: [holdPublishing('review')],
       // Stage-scoped, so each review visit starts without a decision.
       fields: [defineField({type: 'string', name: 'decision', title: 'Decision'})],
