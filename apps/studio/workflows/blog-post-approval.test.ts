@@ -38,18 +38,11 @@ describe('blog-post-approval', () => {
     expect(instance.currentStage).toBe('drafting')
   })
 
-  test('submit moves to review; an editor approves', async () => {
+  test('submit moves to review; an administrator approves', async () => {
     const {bench, id, submit, review} = await start()
     await submit()
     expect(await bench.currentStage(id)).toBe('review')
 
-    const {instance} = await review('approve', editor)
-    expect(instance.currentStage).toBe('approved')
-  })
-
-  test('administrators can approve too', async () => {
-    const {submit, review} = await start()
-    await submit()
     const {instance} = await review('approve', admin)
     expect(instance.currentStage).toBe('approved')
   })
@@ -58,32 +51,35 @@ describe('blog-post-approval', () => {
     const {bench, id, submit, review} = await start()
     await submit()
 
-    const {instance} = await review('send-back', editor, {comments: 'Tighten the intro'})
+    const {instance} = await review('send-back', admin, {comments: 'Tighten the intro'})
     expect(instance.currentStage).toBe('drafting')
     expect(await bench.activityStatus(id, 'write')).toBe('active')
     expect(fieldValue(instance, 'reviewComments')).toBe('Tighten the intro')
-    expect(fieldValue(instance, 'reviewedBy')).toMatchObject({id: editor.id})
+    expect(fieldValue(instance, 'reviewedBy')).toMatchObject({id: admin.id})
 
     // Second visit starts with no decision, so it waits in review.
     await submit()
     expect(await bench.currentStage(id)).toBe('review')
 
-    const {instance: done} = await review('approve', editor)
+    const {instance: done} = await review('approve', admin)
     expect(done.currentStage).toBe('approved')
   })
 
   test('send back requires comments', async () => {
     const {bench, id, submit, review} = await start()
     await submit()
-    await expect(review('send-back', editor)).rejects.toThrow()
+    await expect(review('send-back', admin)).rejects.toThrow()
     expect(await bench.currentStage(id)).toBe('review')
   })
 
-  test('a contributor cannot approve or send back', async () => {
+  test.each([
+    ['a contributor', writer],
+    ['an editor', editor],
+  ])('%s cannot approve or send back', async (_label, actor) => {
     const {bench, id, submit, review} = await start()
     await submit()
 
-    const evaluation = await bench.evaluate({instanceId: id, actor: writer})
+    const evaluation = await bench.evaluate({instanceId: id, actor})
     const actions = evaluation.currentStage.activities.flatMap((a) => a.actions)
     for (const name of ['approve', 'send-back']) {
       expect(actions.find((a) => a.action.name === name)).toMatchObject({
@@ -92,10 +88,11 @@ describe('blog-post-approval', () => {
       })
     }
 
-    await expect(review('approve', writer)).rejects.toBeInstanceOf(ActionDisabledError)
-    await expect(review('send-back', writer, {comments: 'x'})).rejects.toBeInstanceOf(
+    await expect(review('approve', actor)).rejects.toBeInstanceOf(ActionDisabledError)
+    await expect(review('send-back', actor, {comments: 'x'})).rejects.toBeInstanceOf(
       ActionDisabledError,
     )
+    expect(await bench.currentStage(id)).toBe('review')
   })
 
   test('publishing is held until approval', async () => {
@@ -106,7 +103,7 @@ describe('blog-post-approval', () => {
     expect(await guardNames()).toEqual(['hold-publishing-drafting'])
     await submit()
     expect(await guardNames()).toEqual(['hold-publishing-review'])
-    await review('approve', editor)
+    await review('approve', admin)
     expect(await guardNames()).toEqual([])
   })
 
