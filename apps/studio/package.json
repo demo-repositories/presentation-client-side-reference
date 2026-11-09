@@ -25,14 +25,25 @@
     "migrate-recipe-categories": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/migrate-recipe-categories.ts --with-user-token",
     "cleanup-orphan-assets": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/delete-orphan-assets.ts --with-user-token",
     "seed-blog-posts": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/seed-blog-posts.ts --with-user-token",
-    "bootstrap": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/bootstrap.ts --with-user-token"
+    "bootstrap": "NODE_OPTIONS='--import tsx/esm' sanity exec scripts/bootstrap.ts --with-user-token",
+    "workflows:check": "sanity-workflows deploy --check",
+    "workflows:deploy": "sanity-workflows deploy",
+    "test": "vitest run workflows"
   },
   "dependencies": {
     "@sanity/agent-context": "^0.6.0",
     "@sanity/assist": "catalog:",
     "@sanity/client": "catalog:",
     "@sanity/icons": "catalog:",
+    "@sanity/sdk": "^3.12.0",
     "@sanity/vision": "catalog:",
+    "@sanity/workflow-components": "0.37.0",
+    "@sanity/workflow-diagram": "0.37.0",
+    "@sanity/workflow-engine": "0.37.0",
+    "@sanity/workflow-react": "0.37.0",
+    "@sanity/workflow-sdk": "0.37.0",
+    "@sanity/workflow-studio": "0.37.0",
+    "@sanity/workflow-studio-plugin": "0.37.0",
     "@starter/l10n": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
@@ -41,10 +52,13 @@
   },
   "devDependencies": {
     "@portabletext/markdown": "^1.1.3",
+    "@sanity/workflow-cli": "0.37.0",
+    "@sanity/workflow-engine-test": "0.37.0",
     "@starter/sanity-types": "workspace:*",
     "@starter/tsconfig": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

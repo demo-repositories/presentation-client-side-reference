@@ -5,6 +5,7 @@ import {presentationTool} from 'sanity/presentation'
 import {assist} from '@sanity/assist'
 import {visionTool} from '@sanity/vision'
 import {agentContextPlugin} from '@sanity/agent-context/studio'
+import {workflowDefaultDocumentNode, workflowStudioPlugin} from '@sanity/workflow-studio-plugin'
 import {createL10n, useTranslateFieldAction} from '@starter/l10n'
 import {schemaTypes} from './schemaTypes'
 import {MiseIcon} from './components/MiseIcon'
@@ -102,7 +103,7 @@ export default defineConfig({
   plugins: isSchemaExtract
     ? [l10n.plugin]
     : [
-        structureTool({structure}),
+        structureTool({structure, defaultDocumentNode: workflowDefaultDocumentNode()}),
         presentationTool({
           resolve,
           previewUrl: {
@@ -116,6 +117,12 @@ export default defineConfig({
         }),
         visionTool(),
         agentContextPlugin(),
+        // Definitions live in ./workflows and deploy via `pnpm --filter studio workflows:deploy`.
+        workflowStudioPlugin({
+          mappings: [
+            {docType: 'blogPost', definition: 'blog-post-approval', label: 'Editor approval'},
+          ],
+        }),
         l10n.plugin,
         assist({
           fieldActions: {
